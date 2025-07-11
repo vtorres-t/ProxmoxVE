@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
+source <(curl -fsSL https://raw.githubusercontent.com/vtorres-t/ProxmoxVE/main/misc/build.func)
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: rcourtman
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/vtorres-t/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/rcourtman/Pulse
 
 APP="Pulse"
@@ -24,7 +24,7 @@ function update_script() {
   check_container_storage
   check_container_resources
   if [[ -d /opt/pulse-monitor ]]; then
-  msg_error "An old installation was detected. Please recreate the LXC from scratch (https://github.com/community-scripts/ProxmoxVE/pull/4848)"
+  msg_error "An old installation was detected. Please recreate the LXC from scratch (https://github.com/vtorres-t/ProxmoxVE/pull/4848)"
   exit 1
   fi
   if [[ ! -d /opt/pulse ]]; then

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
+source <(curl -fsSL https://raw.githubusercontent.com/vtorres-t/ProxmoxVE/main/misc/build.func)
 # Copyright (c) 2021-2025 community-scripts
 # Author: CrazyWolf13
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
+# License: MIT | https://github.com/vtorres-t/ProxmoxVE/raw/main/LICENSE
 # Source: https://gitlab.com/crafty-controller/crafty-4
 
 APP="Crafty-Controller"
