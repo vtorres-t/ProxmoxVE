@@ -5,7 +5,7 @@
 # License: MIT
 # https://github.com/vtorres-t/ProxmoxVE/raw/main/LICENSE
 
-source /dev/stdin <<<$(curl -fsSL https://raw.githubusercontent.com/vtorres-t/ProxmoxVE/main/misc/api.func)
+
 
 function header_info {
   clear
@@ -63,13 +63,13 @@ THIN="discard=on,ssd=1,"
 set -e
 trap 'error_handler $LINENO "$BASH_COMMAND"' ERR
 trap cleanup EXIT
-trap 'post_update_to_api "failed" "INTERRUPTED"' SIGINT
-trap 'post_update_to_api "failed" "TERMINATED"' SIGTERM
+
+
 function error_handler() {
   local exit_code="$?"
   local line_number="$1"
   local command="$2"
-  post_update_to_api "failed" "$command"
+
   local error_message="${RD}[ERROR]${CL} in line ${RD}$line_number${CL}: exit code ${RD}$exit_code${CL}: while executing command ${YW}$command${CL}"
   echo -e "\n$error_message\n"
   cleanup_vmid
@@ -406,7 +406,7 @@ arch_check
 pve_check
 ssh_check
 start_script
-post_to_api_vm
+
 
 msg_info "Validating Storage"
 while read -r line; do
@@ -523,7 +523,7 @@ if [ "$START_VM" == "yes" ]; then
   qm start $VMID
   msg_ok "Started Ubuntu 24.04 VM"
 fi
-post_update_to_api "done" "none"
+
 msg_ok "Completed Successfully!\n"
 echo -e "Setup Cloud-Init before starting \n
 More info at https://github.com/vtorres-t/ProxmoxVE/discussions/272 \n"
