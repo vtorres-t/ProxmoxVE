@@ -40,13 +40,22 @@ if [ $? -ne 0 ]; then
   exit
 fi  
 
-function clean_container() {
+function clean_container_debian_ubuntu() {
   container=$1
   header_info
   name=$(pct exec "$container" hostname)
   echo -e "${BL}[Info]${GN} Cleaning ${name} ${CL} \n"
   pct exec "$container" -- bash -c "apt-get -y --purge autoremove && apt-get -y autoclean && bash <(curl -fsSL https://raw.githubusercontent.com/vtorres-t/ProxmoxVE/main/tools/pve/clean.sh) && rm -rf /var/lib/apt/lists/* && apt-get update"
 }
+
+function clean_container_alpine() {
+  container=$1
+  header_info
+  name=$(pct exec "$container" hostname)
+  echo -e "${BL}[Info]${GN} Cleaning ${name} ${CL} \n"
+  pct exec "$container" -- bash -c "bash <(curl -fsSL https://raw.githubusercontent.com/vtorres-t/ProxmoxVE/main/tools/pve/clean.sh) && apk cache clean"
+}
+
 for container in $(pct list | awk '{if(NR>1) print $1}'); do
   if [[ " ${excluded_containers[@]} " =~ " $container " ]]; then
     header_info
@@ -54,9 +63,9 @@ for container in $(pct list | awk '{if(NR>1) print $1}'); do
     sleep 1
   else
     os=$(pct config "$container" | awk '/^ostype/ {print $2}')
-    if [ "$os" != "debian" ] && [ "$os" != "ubuntu" ]; then
+    if [ "$os" != "debian" ] && [ "$os" != "ubuntu" ] && [ "$os" != "alpine" ]; then
       header_info
-      echo -e "${BL}[Info]${GN} Skipping ${name} ${RD}$container is not Debian or Ubuntu ${CL} \n"
+      echo -e "${BL}[Info]${GN} Skipping ${name} ${RD}$container is not Debian or Ubuntu or Alpine ${CL} \n"
       sleep 1
       continue
     fi
@@ -68,11 +77,19 @@ for container in $(pct list | awk '{if(NR>1) print $1}'); do
       pct start "$container"
       echo -e "${BL}[Info]${GN} Waiting For${BL} $container${CL}${GN} To Start ${CL} \n"
       sleep 5
-      clean_container "$container"
+      if [ "$os" != "alpine" ]; then
+        clean_container_debian_ubuntu "$container"
+      elif [ "$os" != "debian" ] && [ "$os" != "ubuntu" ]; then
+        clean_container_alpine "$container"
+      fi
       echo -e "${BL}[Info]${GN} Shutting down${BL} $container ${CL} \n"
       pct shutdown "$container" &
     elif [ "$status" == "status: running" ]; then
-      clean_container "$container"
+      if [ "$os" != "alpine" ]; then
+        clean_container_debian_ubuntu "$container"
+      elif [ "$os" != "debian" ] && [ "$os" != "ubuntu" ]; then
+        clean_container_alpine "$container"
+      fi
     fi
   fi
 done
