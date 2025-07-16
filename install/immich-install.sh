@@ -111,23 +111,6 @@ if [[ ${prompt,,} =~ ^(y|yes)$ ]]; then
   msg_ok "Installed OpenVINO dependencies"
 fi
 
-msg_info "Installing Packages from Testing Repo"
-export APT_LISTCHANGES_FRONTEND=none
-export DEBIAN_FRONTEND=noninteractive
-$STD apt-get install -t testing --no-install-recommends -y \
-  libio-compress-brotli-perl \
-  libwebp7 \
-  libwebpdemux2 \
-  libwebpmux3 \
-  libhwy1t64 \
-  libdav1d-dev \
-  libhwy-dev \
-  libwebp-dev
-if [[ -f ~/.openvino ]]; then
-  $STD apt-get install -t testing -y patchelf
-fi
-msg_ok "Packages from Testing Repo Installed"
-
 NODE_VERSION="22" setup_nodejs
 PG_VERSION="16" PG_MODULES="pgvector" setup_postgresql
 
@@ -153,6 +136,26 @@ $STD sudo -u postgres psql -c "ALTER USER $DB_USER WITH SUPERUSER;"
   echo "Database Name: $DB_NAME"
 } >>~/"$APPLICATION".creds
 msg_ok "Set up Postgresql Database"
+
+msg_info "Installing Packages from Testing Repo"
+export APT_LISTCHANGES_FRONTEND=none
+export DEBIAN_FRONTEND=noninteractive
+$STD apt-get install -t testing --no-install-recommends -y \
+  libio-compress-brotli-perl \
+  libwebp7 \
+  libwebpdemux2 \
+  libwebpmux3 \
+  libhwy1t64 \
+  libdav1d-dev \
+  libhwy-dev \
+  libwebp-dev
+if [[ -f ~/.openvino ]]; then
+  $STD apt-get install -t testing -y patchelf
+fi
+msg_ok "Packages from Testing Repo Installed"
+
+$STD sudo -u postgres psql -c "ALTER DATABASE postgres REFRESH COLLATION VERSION;"
+$STD sudo -u postgres psql -c "ALTER DATABASE $DB_NAME REFRESH COLLATION VERSION;"
 
 msg_info "Compiling Custom Photo-processing Library (extreme patience)"
 LD_LIBRARY_PATH=/usr/local/lib
@@ -251,7 +254,8 @@ $STD make clean
 cd "$STAGING_DIR"
 
 SOURCE=$SOURCE_DIR/libvips
-: "${LIBVIPS_REVISION:=$(jq -cr '.revision' $BASE_DIR/server/sources/libvips.json)}"
+# : "${LIBVIPS_REVISION:=$(jq -cr '.revision' $BASE_DIR/server/sources/libvips.json)}"
+: "${LIBVIPS_REVISION:=8fa37a64547e392d3808eed8d72adab7e02b3d00}"
 $STD git clone https://github.com/libvips/libvips.git "$SOURCE"
 cd "$SOURCE"
 $STD git reset --hard "$LIBVIPS_REVISION"
@@ -298,6 +302,10 @@ cd "$SRC_DIR"
 cp -a server/{node_modules,dist,bin,resources,package.json,package-lock.json,start*.sh} "$APP_DIR"/
 cp -a web/build "$APP_DIR"/www
 cp LICENSE "$APP_DIR"
+cd "$APP_DIR"
+export SHARP_FORCE_GLOBAL_LIBVIPS=true
+$STD npm install sharp
+rm -rf "$APP_DIR"/node_modules/@img/sharp-{libvips*,linuxmusl-x64}
 msg_ok "Installed Immich Web Components"
 
 cd "$SRC_DIR"/machine-learning
@@ -328,8 +336,6 @@ ln -s "$UPLOAD_DIR" "$APP_DIR"/upload
 ln -s "$UPLOAD_DIR" "$ML_DIR"/upload
 
 msg_info "Installing Immich CLI"
-$STD npm install --build-from-source sharp
-rm -rf "$APP_DIR"/node_modules/@img/sharp-{libvips*,linuxmusl-x64}
 $STD npm i -g @immich/cli
 msg_ok "Installed Immich CLI"
 
